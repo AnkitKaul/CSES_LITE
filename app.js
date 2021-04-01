@@ -37,18 +37,26 @@ app.post("/login", function(req, res){
     let username = req.body.username;
     let password = req.body.password;
 
-    // res.redirect("/secrets");
+    User.findOne({username: username}, function(err, user){
+        if(err){
+            console.log("Some error Occurred");
+        } else{
+            if(password == user.password){
+                res.render("secrets.ejs");
+            } else{
+                res.redirect("/login");
+            }
+        }
+    })
 });
 
 app.post("/register", function(req, res){
     let username = req.body.username;
     let password = req.body.password;
 
-    let flag = true;
-
     User.exists({username: username}, function(err, flag){
         if(err){
-            console.log("Some error occurred");
+            console.log("Some error occurred.");
         } else{
             if(flag){
                 res.redirect("/login");
@@ -58,7 +66,9 @@ app.post("/register", function(req, res){
                     password: password
                 });
 
-                user.save();
+                user.save(function(err){
+                    console.log("Error Occured while writing to db.");
+                });
 
                 res.render("secrets.ejs");
             }
