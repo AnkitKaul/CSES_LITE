@@ -33,29 +33,37 @@ app.get("/register", function(req, res){
 });
 
 
-app.get("/secrets", function(req, res){
-    res.render("secrets.ejs");
-})
-
 app.post("/login", function(req, res){
     let username = req.body.username;
     let password = req.body.password;
 
-    res.redirect("/secrets");
+    // res.redirect("/secrets");
 });
 
 app.post("/register", function(req, res){
     let username = req.body.username;
     let password = req.body.password;
 
-    const user = new User({
-        username: username,
-        password: password
+    let flag = true;
+
+    User.exists({username: username}, function(err, flag){
+        if(err){
+            console.log("Some error occurred");
+        } else{
+            if(flag){
+                res.redirect("/login");
+            } else{
+                let user = new User({
+                    username: username,
+                    password: password
+                });
+
+                user.save();
+
+                res.render("secrets.ejs");
+            }
+        }
     });
-
-    user.save();
-
-    res.redirect("/secrets");
 });
 
 
