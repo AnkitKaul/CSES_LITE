@@ -8,6 +8,8 @@ const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 
+const HackerEarth = require('hackerearth-v4-node');
+
 const app = express();
 
 app.use(express.static("public"));
@@ -44,6 +46,55 @@ passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
+
+//hackerearth api connection
+const HE = new HackerEarth({
+    clientSecret: process.env.CLIENT_SECRET,
+    memory_limit: 10000,
+    time_limit: 2,
+    lang: 'PYTHON3'
+});
+
+const source = 'print("GOD ARHAM")';
+
+app.get("/he", function(req, res){
+    HE.execute({
+        source: source
+    }, 
+    function(err,response){
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(response.data);
+
+            HE.get_status(response.data.he_id, function(err, resp){
+                if(err){
+                    console.log(err);
+                }
+                else{
+                    console.log(resp.data);
+
+                    if (resp.data.result.run_status.status === 'AC') {
+                        // let ouputUrl = resp.data.result.run_status.output;
+                        HE.get_output({
+                            url: resp.data.result.run_status.output
+                        }, function(err, respo){
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                console.log(respo.data);
+
+                                res.send(respo.data);
+                            }
+                        });
+                    }
+                }
+            });
+
+        }
+    });
+
+});
 
 
 app.get("/", function(req, res){
