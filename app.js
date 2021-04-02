@@ -52,49 +52,59 @@ const HE = new HackerEarth({
     clientSecret: process.env.CLIENT_SECRET,
     memory_limit: 10000,
     time_limit: 2,
-    lang: 'PYTHON3'
+    lang: 'CPP',
+    callbackURL: "/he"
 });
 
-const source = 'print("GOD ARHAM")';
+// const source = 'print("GOD ARHAM")';
 
 app.get("/he", function(req, res){
     HE.execute({
-        source: source
+        sourceFile: __dirname + '/problems/prog.cpp',
+        // lang: 'CPP',
+        inputFile: __dirname + '/problems/input.txt',
+        memory_limit: 10000,
+        time_limit: 2
     }, 
-    function(err,response){
+    function(err, response){
         if (err) {
             console.log(err);
         } else {
             console.log(response.data);
 
-            HE.get_status(response.data.he_id, function(err, resp){
-                if(err){
-                    console.log(err);
-                }
-                else{
-                    console.log(resp.data);
-
-                    if (resp.data.result.run_status.status === 'AC') {
-                        // let ouputUrl = resp.data.result.run_status.output;
-                        HE.get_output({
-                            url: resp.data.result.run_status.output
-                        }, function(err, respo){
-                            if (err) {
-                                console.log(err);
-                            } else {
-                                console.log(respo.data);
-
-                                res.send(respo.data);
-                            }
-                        });
-                    }
-                }
-            });
+            // setTimeout(function(){
+            //     HE.get_status(response.data.he_id, function(err, resp){
+            //         if (err) {
+            //             console.log(err);
+            //         }
+            //         else{
+            //             console.log(resp.data);
+    
+            //             if (resp.data.result.run_status.status === 'AC') {
+            //                 HE.get_output({
+            //                     url: resp.data.result.run_status.output
+            //                 }, function(err, respo){
+            //                     if (err) {
+            //                         console.log(err);
+            //                     } else {
+            //                         console.log(respo.data);
+    
+            //                         res.send(respo.data);
+            //                     }
+            //                 });
+            //             } 
+            //         }
+            //     });
+            // }, 5000);   
 
         }
     });
 
 });
+
+app.post("/he", function(res, req){
+    console.log("FUCK OFF");
+})
 
 
 app.get("/", function(req, res){
