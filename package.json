@@ -4,7 +4,9 @@
   "description": "Full Copy Of Cses Which will Definately not be completed!",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "build": "node app.js"
   },
   "author": "Racer5x, Noob3020",
   "license": "ISC",

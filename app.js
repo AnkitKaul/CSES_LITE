@@ -70,7 +70,7 @@ app.get("/he", function(req, res){
         if (err) {
             console.log(err);
         } else {
-            console.log(response.data);
+            console.log(responsnpe.data);
 
             // setTimeout(function(){
             //     HE.get_status(response.data.he_id, function(err, resp){
