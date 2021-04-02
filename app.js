@@ -143,26 +143,30 @@ app.post("/login", function(req, res){
             console.log(err);
             res.redirect("/login");
         } else {
-            const handle = use.handle;
+            if(use === null){
+                res.redirect("/register");
+            } else {
+                const handle = use.handle;
 
-            // console.log(handle);
-            const user = new User({
-                handle: handle,
-                username: req.body.username,
-                password: req.body.password
-            });
-            
-            req.logIn(user, function(err){
-                if (err) {
-                    console.log(err);
-                    res.redirect("/login");
-                } else {
-                    passport.authenticate("local")(req, res, function(){
-                        // console.log("/dashboard/" + handle);
-                        res.redirect("/dashboard/" + handle);
-                    });
-                }
-            });
+                // console.log(handle);
+                const user = new User({
+                    handle: handle,
+                    username: req.body.username,
+                    password: req.body.password
+                });
+                
+                req.logIn(user, function(err){
+                    if (err) {
+                        console.log(err);
+                        res.redirect("/login");
+                    } else {
+                        passport.authenticate("local")(req, res, function(){
+                            // console.log("/dashboard/" + handle);
+                            res.redirect("/dashboard/" + handle);
+                        });
+                    }
+                });
+            }
         }
     });
     
