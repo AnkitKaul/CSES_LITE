@@ -1,77 +1,107 @@
+require('dotenv').config()
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require('mongoose');
-
-mongoose.connect('mongodb://localhost:27017/usersDB', {useNewUrlParser: true, useUnifiedTopology: true});
+const session = require("express-session");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
 
 const app = express();
 
 app.use(express.static("public"));
-app.set("viewengine", "ejs");
+app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+
+app.use(session({
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+mongoose.connect('mongodb://localhost:27017/usersDB', {useNewUrlParser: true, useUnifiedTopology: true});
 
 const userSchema = new mongoose.Schema({
     username: String,
     password: String
 });
 
-const User = mongoose.model('User', userSchema);
+userSchema.plugin(passportLocalMongoose);
+
+const User = new mongoose.model('User', userSchema);
+
+//passport code.. copied from documentation
+passport.use(User.createStrategy());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
 
 app.get("/", function(req, res){
-    res.render("home.ejs");
+    res.render("home");
 });
 
 app.get("/login", function(req, res){
-    res.render("login.ejs");
+    res.render("login");
 });
 
 app.get("/register", function(req, res){
-    res.render("register.ejs");
+    res.render("register");
+});
+
+app.get("/secrets", function(req, res){
+    if(req.isAuthenticated()){
+        res.render("secrets");
+    } else {
+        res.redirect("/login");
+    }
+});
+
+app.get("/logout", function(req, res){
+    req.logout();
+
+    res.redirect("/");
 });
 
 
 app.post("/login", function(req, res){
-    let username = req.body.username;
-    let password = req.body.password;
-
-    User.findOne({username: username}, function(err, user){
-        if(err){
-            console.log("Some error Occurred");
-        } else{
-            if(password == user.password){
-                res.render("secrets.ejs");
-            } else{
-                res.redirect("/login");
-            }
+    const user = new User({
+        username: req.body.username,
+        password: req.body.password
+    });
+    
+    req.logIn(user, function(err){
+        if (err) {
+            console.log(err);
+            redirect("/login");
+        } else {
+            passport.authenticate("local")(req, res, function(){
+                res.redirect("/secrets");
+            });
         }
-    })
+    });
 });
 
 app.post("/register", function(req, res){
     let username = req.body.username;
     let password = req.body.password;
 
-    User.exists({username: username}, function(err, flag){
-        if(err){
-            console.log("Some error occurred.");
-        } else{
-            if(flag){
-                res.redirect("/login");
-            } else{
-                let user = new User({
-                    username: username,
-                    password: password
-                });
-
-                user.save(function(err){
-                    console.log("Error Occured while writing to db.");
-                });
-
-                res.render("secrets.ejs");
-            }
+    User.register({username: username}, password, function(err, user) {
+        if (err) {
+            console.log(err);
+            res.redirect("/register");
+        } else {
+            passport.authenticate("local")(req, res, function(){
+                res.redirect("/secrets");
+            });
         }
     });
 });
