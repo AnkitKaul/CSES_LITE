@@ -29,6 +29,7 @@ app.use(passport.session());
 mongoose.connect('mongodb://localhost:27017/usersDB', {useNewUrlParser: true, useUnifiedTopology: true});
 
 const userSchema = new mongoose.Schema({
+    handle: String, 
     username: String,
     password: String
 });
@@ -57,9 +58,12 @@ app.get("/register", function(req, res){
     res.render("register");
 });
 
-app.get("/secrets", function(req, res){
+app.get("/dashboard/:handle", function(req, res){
     if(req.isAuthenticated()){
-        res.render("secrets");
+        // let handle = req.body.handle;
+        // console.log(req.params.handle);
+
+        res.render("dashboard", {handle: req.params.handle});
     } else {
         res.redirect("/login");
     }
@@ -73,34 +77,48 @@ app.get("/logout", function(req, res){
 
 
 app.post("/login", function(req, res){
-    const user = new User({
-        username: req.body.username,
-        password: req.body.password
-    });
-    
-    req.logIn(user, function(err){
+    User.findOne({username: req.body.username}, function(err, use){
         if (err) {
             console.log(err);
-            redirect("/login");
+            res.redirect("/login");
         } else {
-            passport.authenticate("local")(req, res, function(){
-                res.redirect("/secrets");
+            const handle = use.handle;
+
+            // console.log(handle);
+            const user = new User({
+                handle: handle,
+                username: req.body.username,
+                password: req.body.password
+            });
+            
+            req.logIn(user, function(err){
+                if (err) {
+                    console.log(err);
+                    res.redirect("/login");
+                } else {
+                    passport.authenticate("local")(req, res, function(){
+                        // console.log("/dashboard/" + handle);
+                        res.redirect("/dashboard/" + handle);
+                    });
+                }
             });
         }
     });
+    
 });
 
 app.post("/register", function(req, res){
+    let handle   = req.body.handle;
     let username = req.body.username;
     let password = req.body.password;
 
-    User.register({username: username}, password, function(err, user) {
+    User.register({handle: handle, username: username}, password, function(err, user) {
         if (err) {
             console.log(err);
             res.redirect("/register");
         } else {
             passport.authenticate("local")(req, res, function(){
-                res.redirect("/secrets");
+                res.redirect("/dashboard/" + handle);
             });
         }
     });
